@@ -86,18 +86,61 @@ The Node.js bridge server uses the osc-js library with its BridgePlugin to handl
 All audio effects are implemented in Max/MSP using a consistent architecure. The Max/MSP audio engine receives OSC messages via [udpreceive 8000] and routes them to individual effect modules. Each effect is implemented as a separate patch that receives audio via [receive~ audio_in_l/r] and outputs processed signal via [send~ fx_wet_l/r].
 
 ### 5.4.1 Reverb Effect
+The reverb effect is implemented using a custom delay-network reverb design based on the Schroeder reverb. This classic algorithm combines diffusion stages followed by parallel feedback comb filters to simulate spatial reverberation.
+
+The incoming audio first passes through multiple allpass diffusion stages implemented using short delay lines. These spread the impulse response in time without coloring the frequency spectrum, creating the initial "smear" of early reflections. After diffusion, the signal is fed into several parallel feedback comb filters, each with a slightly different delay length (chosen to be mutually prime to avoid metallic resonances) and feedback coefficient. Together, these generate a dense late reverb tail that decays naturally.
+
+<img width="761" height="242" alt="Screenshot 2025-12-10 at 12 47 42 PM" src="https://github.com/user-attachments/assets/28150c03-dc49-476f-942a-b8fb3c0fa349" />
+Fig. Schroeder reverberator. 
+
+Gesture control is applied after the acoustic structure of the reverb has already been generated. The reverb_depth parameter controls the wet signal amplitude rather than altering the internal feedback network directly—this is an important design decision that avoids instability. Modifying feedback coefficients in real-time can cause runaway oscillation or abrupt tonal changes; controlling output level is much safer.
+
+The reverb_active parameter enables or disables the output using a smoothed gain envelope (100ms fade time for reverb, longer than other effects to avoid truncating the tail), ensuring clicks and discontinuities do not occur. The right-hand peace gesture toggles reverb on and off.
+
 
 ### 5.4.2 Distortion Effect
-The distortion effect uses a multi-stage signal chain: pre-gain boost. high-pass filtering to remove 
+The distortion patches trats the audio signal with a nonlinear transfer function to produce harmonics and saturation. I use a waveshaping approach, rather than hard clipping, specifically employing *[tanh~]* which provides smooth soft-clipping characteristics that are more musically pleasing than abrupt digital clipping. 
+
+Inside the patch, the incoming audio is first scaled by a pre-gain factor driven by *distortion_depth*. A low depth value keeps the signal mostly in the linear region of the transfer function, while higher depths push it into saturation, increasing harmonic content. After shaping, I apply a post-gain *(*~ 0.4)* to normalize the level so the effect doesn't simply sound louder. 
+
+The signal chain includes a high-pass filter *([svf~ 80. 0.5])* before the waveshaper to remove low-frequency content that would otherwise produce muddy intermodulation distortion. After waveshaping, a resonant low-pass filter ([lores~]) with cutoff frequency mapped to depth (500Hz–3000Hz) adds dynamic tonal character—higher distortion settings open up the filter for a brighter, more aggressive tone.
+
+The right hand first gesture triggers *distortion_active*, which fades the entire effect in or out via a smoothed gain envelope. This separation of depth and active controls allows the performer to "set" a distortion intensity with the left hand, then punch it in and out with the right hand gesture.
 
 ### 5.4.3 Chorus Effect
+The chorus patch is built using a short modulated delay line. Inside Max I use a *[tapin~ 100] / [tapout~ 17 23]* pair for the delay memory. Two delay taps at prime-number intervals (17ms and 23ms) are chosen to avoid reinforcement patterns that would color the sound.
 
-### 5.4.4 Low-Pass Filter
+A low-frequency random signal *([rand~ 8] and [rand~ 6])* modulates the delay times. When this modulated delay signal is mixed back with the dry signal, small changes in delay time produce sligh pitch deviations due to the Doppler effect. At subtle depths (0.5 - 1ms modulation swing), this is percieved as a classic chorus. At higher depths (up to 4ms per swing), it moves towards a flanger effect. 
+
+A feedback path *(*~ 0.3)* recirculates 30% of the output back to the input, adding density without risking instability. The right-hand open palm gesture sets *chorus_active*, and the left-hand pinch controls *chorus_depth*. All control changes are smoothed with *[line~]* to avoid zipper noise when the LFO parameters are being driven by noisy hand tracking data.
+
+### 5.4.4 Resonant Low-Pass Filter
+The filter effect uses a resonant low-pass filter where the cutoff frequency is mapped directly from the pinch depth. This creates a classic synthesizer-style "wah" effect that responds to continuous hand gestures.
+
+The primary control parameter is cutoff frequency, mapped from the continuous pinch distance (0–1) to a frequency range of 200Hz to 8000Hz. This range was chosen to span from a dark, muffled tone to bright and open, covering the musically useful spectrum for filtering guitar and voice signals.
+
+The resonance (Q factor) is set at 0.8—high enough to add emphasis at the cutoff frequency without self-oscillation. This creates an expressive sweep that highlights the frequency being controlled by the hand position.
 
 ### 5.4.5 Granular Pitch Shifting
+The granular pitch effect uses a time-domain approach rather than FFT-based processing. The patch writes the incoming audio into a circular buffer using [record~] and then reads it back using [groove~] at variable playback speeds.
 
+When the playback rate is greater than 1, the audio is read faster and the perceived pitch rises; when it's less than 1, the pitch drops. The granular_depth parameter, controlled by the left-hand gesture, is mapped to this playback rate over a range from 0.5× to 2× (one octave down to one octave up).
 
+Because this is a time-domain approach, the effect has a slightly grainy, time-stretch texture, but it responds with low latency and works well with continuous gestural control. The right-hand one-finger gesture toggles granular_active, which crossfades the wet output in and out. This makes it possible to treat pitch shifting as a momentary gesture—for instance, a quick glissando or dive-bomb—rather than a permanent processing state.
 
+### 5.4.6 Parameter Smoothing Strategy 
+Parameter smoothing using *[line~]* is particularly important in gesture-based systems. Without smoothing, small tracking errors or rapid hand motion would produce zipper noise (audible stepping artifacts) and unstable effect behavior. All effect parameters are smoothed with ramp times chosen based on the parameter's perceptual sensitivity:
+
+|Parameter Type|Ramp Time|Rationale|
+|--------------|---------|---------|
+|Gain/Amplitude| 20ms    ||
+|Filter Cutoff | 20ms    | |
+|Pitch/Rate    | 50ms    | |
+|Reverb Wet    | 50-100ms| |
+|Active on/off | 20-100ms| |
+
+## Challenges & Solutions
+> *Problem:* The thumbs-up gesture proved unreliable because MediaPipe's z-coordinate estimation (depth from monocular camera) is less accurate than x/y positioning. The thumb's position relative to the pam 
 
 ## Future Work & Possible Improvements 
 1. Daw Integration
