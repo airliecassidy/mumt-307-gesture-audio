@@ -6,9 +6,13 @@ This project implements a real-time system that enables msuicians to control aud
 The primary motivation for this project emerged from a practical challenge encountered during guitar recording sessions. When tracking guitar parts, the need to adjust effect parameters - adding reverb during a sustained chord, or engaging a delay - typically requires interrupting the performacne to manipulate physical controls. 
 I envisioned a system where these adjustmnets could be made through natural hand-gestures, allowing continuous playing while dramatically shaping the sound. The main objectives I had for this project were: 
 >**1. Hands-free effect control:** Enable toggling of audio effects without touching equipment.
->**2. Continuous parameter modulation:** Providing smooth, real-time control over effect depth/intensity. 
->**3. Low latency:** Achiee response times suitable for live musical performace. 
+>
+>**2. Continuous parameter modulation:** Providing smooth, real-time control over effect depth/intensity.
+>
+>**3. Low latency:** Achiee response times suitable for live musical performace.
+>
 >**4. Accessibility:** Require only a laptop, rather than specialized sensors.
+>
 
 The system uses a toggle-based interaction model, where gestures act as an on/off switch, rather than requiring sustaining poses. This allows the performer to make a gesture, return their hand to the instrumnet and have the effect remain active until explicitly toggled off - this mirrors the behaviour of traditional stomp-box effect pedals. 
 
