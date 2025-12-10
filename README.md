@@ -140,15 +140,32 @@ Parameter smoothing using *[line~]* is particularly important in gesture-based s
 |Active on/off | 20-100ms| |
 
 ## Challenges & Solutions
-> *Problem:* The thumbs-up gesture proved unreliable because MediaPipe's z-coordinate estimation (depth from monocular camera) is less accurate than x/y positioning. The thumb's position relative to the pam 
+> *Problem:* The thumbs-up gesture proved unreliable because MediaPipe's z-coordinate estimation (depth from monocular camera) is less accurate than x/y positioning. The thumb's position relative to the camera
+>
+
+*Solution:* Changed the detection logic to rely on y-coordinate comparison (thumb tip above wrist in screen space) rather than z-depth. This sacrificed some angle tolerance but significantly improved reliability for front-facing camera positions.
+
+
 
 ## Future Work & Possible Improvements 
-1. Daw Integration
-2. Custom Gesture Training
-3. Multi-Parameter Control
-4. Gesture Confidence Visualization
+### .1 Daw Integration
+The current system operates as a standalone application. A natural extension would be integration with Digital Audio Workstations (DAWs) such as Ableton Live via Max for Live, or as a VST/AU plugin. This would allow gesture control to be applied to any track within a production environment and enable recording automation data for later editing.
 
-   
+### .2 Custom Gesture Training
+The rule-based gesture detection, while functional, limits users to predefined gestures. Implementing a user-trainable classifier (using the HAGRID dataset methodology outlined in the repository) would allow performers to define their own gesture vocabulary. This would involve capturing example frames, extracting landmark features, and training a k-NN or neural network classifier.
+
+### .3 Multi-Parameter Control
+Currently, the left hand controls a single "depth" parameter applied uniformly to all active effects. Future versions could map different finger distances to independent parameters—for example, thumb-to-index for reverb wet/dry, thumb-to-middle for distortion drive, and thumb-to-ring for delay feedback.
+
+## Conclusion 
+This projects success demonstrates the feasibility of hand gesture control for real-time audio effects using only commodity hardware. By combining MediaPipe's robust hand tracking with Max/MSP's flexible audio processing capabilities, the system achieves its primary goal: enabling hands-free manipulation of audio effects during musical performance. 
+
+The toggle-based interaction model, inspired by traditional stomp-box pedals, proves intuitive for musicians accustomed to physical effect switching. The addition of continuous parameter control via pinch distance provides expressive depth beyond simple on/off functionality.
+
+While challenges around gesture ambiguity and latency required careful engineering solutions, the resulting system performs reliably under typical conditions. The modular architecture—separating vision, communication, and audio processing into distinct components—facilitates future extension and integration with other tools.
+
+This work contributes a practical, accessible implementation of gesture-based audio control that can be replicated by other musicians and researchers using the open-source code provided. It represents a step toward more natural, embodied interfaces for music technology that preserve the physical expressiveness of traditional instrumental performance.
+
 
 ## References & Citations
 ### Libraries and Frameworks
