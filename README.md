@@ -1,13 +1,16 @@
 # Hand Gesture Control for Real-Time Audio Effects
 
 ## 1. Abstract
-This project implements a real-time system that enables musicians to control audio effects through hand gestures captured by a standard webcam. By integrating Google's MediaPipe Hands framework for computer vision with Max/MSP for digital signal processing, the system enables musicians and producers to manipulate audio parameters without physical contact with equipment. This project contributes a browser-based gestural audio-control pipeline that requires no proprietary hardware, making gesture-controlled audio manipulation accessible on commodity laptops. Unlike previous gesture–music systems that depend on depth cameras or dedicated sensors, this system leverages a fully web-native computer vision stack, enabling cross-platform deployment. The toggle-plus-continuous-modulation model introduces a hybrid interaction paradigm optimized for musical expressivity.
+This project implements a real-time system for controlling audio effects through hand gestures captured via a standard webcam. By integrating Google's MediaPipe Hands framework for computer vision with Max/MSP for digital signal processing, the system enables musicians to manipulate audio parameters without physical contact with equipment. This project contributes a browser-based gestural audio-control pipeline that requires no proprietary hardware, making gesture-controlled audio manipulation accessible on commodity laptops. Unlike previous gesture–music systems that depend on depth cameras or dedicated sensors, this system leverages a fully web-native computer vision stack, enabling cross-platform deployment. The toggle-plus-continuous-modulation model introduces a hybrid interaction paradigm optimized for musical expressivity.
 
 Users load an audio file into the browser interface, which streams the audio to Max/MSP for processing while gesture data controls the effects in real-time. The right hand controls discrete effect activation through recognized gestures (fist, palm, peace sign, thumbs-up, single finger), while the left hand provides continuous parameter modulation through pinch distance measuremnet. Five audio-effects - distortion, reverb, echo, chorus and pitch-shifting - can be toggled independently and layered simultaneously, with gesture controlled depth parameters affecting the intensity of each active effect. Communication between the browser-based vision system and Max/MSP is achieved through Open Sound Control (OSC) protocol via a WebSocket-to-UDP bridge server. The system performs reliably on standard laptop webcams under typical indoor lighting conditions, achieving approximately 30 frames per second gesture recognition with latency suitable for interactive audio manipulation.
 
 ## 2. Motivation & Objectives 
-The primary motivation for this project emerged from a desire to create a more expressive, embodied way of manipulating audio effects during music production and sound design. Traditional DAW workflows require precise mouse movements or memorized keyboard shortcuts to adjust effect parameters—interactions that feel disconnected from the physical, gestural nature of musical performance.
-I envisioned a system where these adjustments could be made through natural hand-gestures, allowing continuous playing while dramatically shaping the sound. The main objectives I had for this project were: 
+The primary motivation for this project emerged from a desire to create a more expressive, embodied way of manipulating audio effects during music production and sound design. Traditional DAW workflows require precise mouse movements or memorized keyboard shortcuts to adjust effect parameters—interactions that feel disconnected from the physical, gestural nature of musical performance. I wanted to explore whether hand gestures could provide a more intuitive and expressive control interface.
+
+The system is designed for audio file processing rather than live instrument input. Users load an audio file (such as a recorded guitar track, vocal take, or any sound design material) into the browser interface, then use hand gestures to dynamically control effects as the audio plays back. This workflow is particularly suited for:
+
+The main objectives for this project were: 
 >**1. Hands-free effect control:** Enable toggling of audio effects without touching equipment.
 >
 >**2. Continuous parameter modulation:** Provide smooth, real-time control over effect depth/intensity. 
@@ -17,7 +20,7 @@ I envisioned a system where these adjustments could be made through natural hand
 >**4. Accessibility:** Require only a laptop, rather than specialized sensors.
 >
 
-The system uses a toggle-based interaction model, where gestures act as an on/off switch, rather than requiring sustaining poses. This allows the performer to make a gesture, return their hand to a neutral position, and have the effect remain active until explicitly toggled off—mirroring the behavior of traditional stomp-box effect pedals.
+The system uses a toggle-based interaction model, where gestures act as an on/off switch, rather than requiring sustaining poses. This allows the performer to make a gesture, return their hand to a neutral position, and have the effect remain active until explicitly toggled off - mirroring the behavior of traditional stomp-box effect pedals.
 
 ## 3. Background & Related Works 
 
@@ -153,7 +156,7 @@ Parameter smoothing using *[line~]* is particularly important in gesture-based s
 
 **Solution:** Changed the detection logic to rely on y-coordinate comparison (thumb tip above wrist in screen space) rather than z-depth. This sacrificed some angle tolerance but significantly improved reliability for front-facing camera positions.
 
-### 6.2
+### 6.2 Gesture Boundary Ambiguity
 > **Problem:** Transitional hand positions between gestures (e.g., moving from fist to palm) triggered unintended effect changes when the hand passed through configurations that momentarily matched other gestures.
 >
 **Solution:** Implemented a hold-time requirement (400ms) and gesture confirmation state machine. A gesture is only considered valid if it is maintained consistently for the full duration. Combined with a 700ms cooldown between triggers, this eliminated nearly all false positives during typical use.
