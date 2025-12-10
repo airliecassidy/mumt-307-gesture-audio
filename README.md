@@ -101,7 +101,7 @@ The reverb_active parameter enables or disables the output using a smoothed gain
 ### 5.4.2 Distortion Effect
 The distortion patches trats the audio signal with a nonlinear transfer function to produce harmonics and saturation. I use a waveshaping approach, rather than hard clipping, specifically employing *[tanh~]* which provides smooth soft-clipping characteristics that are more musically pleasing than abrupt digital clipping. 
 
-Inside the patch, the incoming audio is first scaled by a pre-gain factor driven by *distortion_depth*. A low depth value keeps the signal mostly in the linear region of the transfer function, while higher depths push it into saturation, increasing harmonic content. After shaping, I apply a post-gain *(*~ 0.4)* to normalize the level so the effect doesn't simply sound louder. 
+Inside the patch, the incoming audio is first scaled by a pre-gain factor driven by *distortion_depth*. A low depth value keeps the signal mostly in the linear region of the transfer function, while higher depths push it into saturation, increasing harmonic content. After shaping, I apply a post-gain (*~ 0.4) to normalize the level so the effect doesn't simply sound louder. 
 
 The signal chain includes a high-pass filter *([svf~ 80. 0.5])* before the waveshaper to remove low-frequency content that would otherwise produce muddy intermodulation distortion. After waveshaping, a resonant low-pass filter ([lores~]) with cutoff frequency mapped to depth (500Hz–3000Hz) adds dynamic tonal character—higher distortion settings open up the filter for a brighter, more aggressive tone.
 
