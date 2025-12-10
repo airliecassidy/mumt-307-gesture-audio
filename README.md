@@ -1,38 +1,42 @@
 # Real-Time Gesture-Controlled Audio Effects
 
 ## 1. Abstract
-This project implements a real-time system that enables msuicians to control audio effects through hand gestures captured by a standard webcame. By integrating MediaPipe's hand landmark detection with custon gesture classification and Max/MSP digital signal processing, the system creates an intuitive, touchless interface for audio manipulation. The right hand controls discrete effect activation through recognized gestures (fist, palm, peace sign, thumbs-up, single finger), while the left hand provides continuous parameter modulation through pinch distance measuremnet. Five audio-effects - distortion, reverb, echo, chorus and pitch-shifting - can be toggled independently and layered simultaneously, with gesture controlled depth parameters affecting the intensity of each active effect. The system communications via Open Sound Control (OSC) protocol,bridging the browser-based computer vision with Max/MSP's audio engine through a Node.js WebSocket-to-UDP bridge. 
+This project implements a real-time system that enables musicians to control audio effects through hand gestures captured by a standard webcame. By integrating Google's MediaPipe Hands framework for computer vision with Max/MSP for digital signal processing, the system enables musicians and producers to manipulate audio parameters without physical contact with equipment. Users load an audio file into the browser interface, which streams the audio to Max/MSP for processing while gesture data controls the effects in real-time. The right hand controls discrete effect activation through recognized gestures (fist, palm, peace sign, thumbs-up, single finger), while the left hand provides continuous parameter modulation through pinch distance measuremnet. Five audio-effects - distortion, reverb, echo, chorus and pitch-shifting - can be toggled independently and layered simultaneously, with gesture controlled depth parameters affecting the intensity of each active effect. Communication between the browser-based vision system and Max/MSP is achieved through Open Sound Control (OSC) protocol via a WebSocket-to-UDP bridge server. The system performs reliably on standard laptop webcams under typical indoor lighting conditions, achieving approximately 30 frames per second gesture recognition with latency suitable for interactive audio manipulation.
 
 ## 2. Motivation & Objectives 
-The primary motivation for this project emerged from a practical challenge encountered during guitar recording sessions. When tracking guitar parts, the need to adjust effect parameters - adding reverb during a sustained chord, or engaging a delay - typically requires interrupting the performacne to manipulate physical controls. 
-I envisioned a system where these adjustmnets could be made through natural hand-gestures, allowing continuous playing while dramatically shaping the sound. The main objectives I had for this project were: 
+The primary motivation for this project emerged from a desire to create a more expressive, embodied way of manipulating audio effects during music production and sound design. Traditional DAW workflows require precise mouse movements or memorized keyboard shortcuts to adjust effect parameters—interactions that feel disconnected from the physical, gestural nature of musical performance.
+I envisioned a system where these adjustments could be made through natural hand-gestures, allowing continuous playing while dramatically shaping the sound. The main objectives I had for this project were: 
 >**1. Hands-free effect control:** Enable toggling of audio effects without touching equipment.
 >
->**2. Continuous parameter modulation:** Providing smooth, real-time control over effect depth/intensity.
+>**2. Continuous parameter modulation:** Provide smooth, real-time control over effect depth/intensity. 
 >
 >**3. Low latency:** Achiee response times suitable for live musical performace.
 >
 >**4. Accessibility:** Require only a laptop, rather than specialized sensors.
 >
 
-The system uses a toggle-based interaction model, where gestures act as an on/off switch, rather than requiring sustaining poses. This allows the performer to make a gesture, return their hand to the instrumnet and have the effect remain active until explicitly toggled off - this mirrors the behaviour of traditional stomp-box effect pedals. 
+The system uses a toggle-based interaction model, where gestures act as an on/off switch, rather than requiring sustaining poses. This allows the performer to make a gesture, return their hand to a neutral position, and have the effect remain active until explicitly toggled off—mirroring the behavior of traditional stomp-box effect pedals.
 
 ## 3. Background & Related Works 
 
 ### 3.1 Hand Tracking in Computer Vision 
+Real-time hand tracking has progressed significantly with the advent of deep learning approaches. Traditional methods relied on color-based segmentation (requiring controlled backgrounds) or depth sensors (requiring specialized hardware like the Kinect). Modern solutions such as MediaPipe Hands (Lugaresi et al., 2019) achieve robust tracking from monocular RGB input through a two-stage neural network pipeline: a palm detector followed by a hand landmark model that predicts 21 3D keypoints per hand.
 
 ### 3.2 Gesture-Based Musical Interfaces
+The concept of gestural control in music has historical precedent in instruments like the theremin (1920) and more recently in commercial products like the Leap Motion controller. Academic research has explored hand gestures for controlling synthesis parameters (Fels & Hinton, 1993), triggering samples (Weinberg & Driscoll, 2006), and conducting virtual orchestras (Lee et al., 2004). This project builds on these foundations while prioritizing accessibility through browser-based implementation and commodity webcams.
 
 ## 4. System Architecture & Design
+The system comprises four interconnected layers, each responsible for a distict aspect of the gesture-to-audio pipeline: 
 
 
 
 ## 5. Methodology 
 ### 5.1 Hand Tracking with MediaPipe
-MediaPipe Hands employs a two-stage detection pipeline optimized for real-time performance. The first stage uses a lightweight palm detector to locate hands within the frame, reducing hte search space for the subsequent landmark model. The second  stage predicts 21 three-dmensional landmarks per detected hand, representing key anatomical points from the wrist through each fingertip. 
+MediaPipe Hands employs a two-stage detection pipeline optimized for real-time performance. The first stage uses a lightweight palm detector to locate hands within the frame, reducing the search space for the subsequent landmark model. The second  stage predicts 21 three-dmensional landmarks per detected hand, representing key anatomical points from the wrist through each fingertip. 
 
 <img width="878" height="424" alt="image" src="https://github.com/user-attachments/assets/6d794dcc-b1d1-4cb5-991d-5d0749d3f265" />
-**Figure 1: MediaPipe hand landmark indices. The model outputs 21 keypoints with x,y,z coordinates.**
+
+Figure 1: MediaPipe hand landmark indices. The model outputs 21 keypoints with x,y,z coordinates.
 
 
 The JavaScript implementation initializes MediaPipe Hands with the following configuration: 
@@ -80,10 +84,11 @@ A moving average filter smooths the raw pinch values to prevent jittery paramete
 Browser security restrictions prevent direct UDP socket access, necessitating a WebSocket-to-UDP bridge architecture. The browser client connects to a Node.js server via WebSocket, which then forwards OSC messages as UDP packets to Max/MSP.
 
 The Node.js bridge server uses the osc-js library with its BridgePlugin to handle protocol translation:
+<img width="529" height="348" alt="Screenshot 2025-12-10 at 1 26 07 PM" src="https://github.com/user-attachments/assets/a98ff551-7dcb-4d2a-9569-061f2274750f" />
 
 
 ### 5.4 Audio Effects Implementation in Max/MSP
-All audio effects are implemented in Max/MSP using a consistent architecure. The Max/MSP audio engine receives OSC messages via [udpreceive 8000] and routes them to individual effect modules. Each effect is implemented as a separate patch that receives audio via [receive~ audio_in_l/r] and outputs processed signal via [send~ fx_wet_l/r].
+All audio effects are implemented in Max/MSP using a consistent architecure. The Max/MSP audio engine receives OSC messages via *[udpreceive 8000]* and routes them to individual effect modules. Each effect is implemented as a separate patch that receives audio via *[receive~ audio_in_l/r]* and outputs processed signal via *[send~ fx_wet_l/r].* A key architectural decision across all effects is the separation of two control envelopes: depth (controlling effect intensity) and active (controlling wet signal presence). This makes each effect feel like a pressure-sensitive control rather than a binary on/off stompbox.
 
 ### 5.4.1 Reverb Effect
 The reverb effect is implemented using a custom delay-network reverb design based on the Schroeder reverb. This classic algorithm combines diffusion stages followed by parallel feedback comb filters to simulate spatial reverberation.
@@ -139,23 +144,39 @@ Parameter smoothing using *[line~]* is particularly important in gesture-based s
 |Reverb Wet    | 50-100ms| |
 |Active on/off | 20-100ms| |
 
-## Challenges & Solutions
-> *Problem:* The thumbs-up gesture proved unreliable because MediaPipe's z-coordinate estimation (depth from monocular camera) is less accurate than x/y positioning. The thumb's position relative to the camera
+## 6. Challenges & Solutions
+> **Problem:** The thumbs-up gesture proved unreliable because MediaPipe's z-coordinate estimation (depth from monocular camera) is less accurate than x/y positioning. The thumb's position relative to the camera
 >
 
 *Solution:* Changed the detection logic to rely on y-coordinate comparison (thumb tip above wrist in screen space) rather than z-depth. This sacrificed some angle tolerance but significantly improved reliability for front-facing camera positions.
 
+> **Problem:** Transitional hand positions between gestures (e.g., moving from fist to palm) triggered unintended effect changes when the hand passed through configurations that momentarily matched other gestures.
+>
+
+*Solution:* Implemented a hold-time requirement (400ms) and gesture confirmation state machine. A gesture is only considered valid if it is maintained consistently for the full duration. Combined with a 700ms cooldown between triggers, this eliminated nearly all false positives during typical use.
+
+> **Problem:**
+>
+*Solution:* 
+
+
+
 
 
 ## Future Work & Possible Improvements 
-### .1 Daw Integration
-The current system operates as a standalone application. A natural extension would be integration with Digital Audio Workstations (DAWs) such as Ableton Live via Max for Live, or as a VST/AU plugin. This would allow gesture control to be applied to any track within a production environment and enable recording automation data for later editing.
+### .1 Live Audio Input Support
+The current system processes pre-recorded audio files. A valuable extension would be supporting live microphone input directly in Max/MSP via *[adc~]*, allowing real-time gesture control during live performance or recording. This would require rearchitecting the audio routing so that gesture data alone (not audio) flows through OSC, while Max/MSP handles audio I/O natively for lower latency. 
 
-### .2 Custom Gesture Training
+
+### .2 Daw Integration
+The current system operates as a standalone application. A natural extension would be integration with DAWs such as Ableton Live via Max for Live, or as a VST/AU plugin. This would allow gesture control to be applied to any track within a production environment and enable recording automation data for later editing.
+
+### .3 Custom Gesture Training
 The rule-based gesture detection, while functional, limits users to predefined gestures. Implementing a user-trainable classifier (using the HAGRID dataset methodology outlined in the repository) would allow performers to define their own gesture vocabulary. This would involve capturing example frames, extracting landmark features, and training a k-NN or neural network classifier.
 
-### .3 Multi-Parameter Control
+### .4 Multi-Parameter Control
 Currently, the left hand controls a single "depth" parameter applied uniformly to all active effects. Future versions could map different finger distances to independent parameters—for example, thumb-to-index for reverb wet/dry, thumb-to-middle for distortion drive, and thumb-to-ring for delay feedback.
+
 
 ## Conclusion 
 This projects success demonstrates the feasibility of hand gesture control for real-time audio effects using only commodity hardware. By combining MediaPipe's robust hand tracking with Max/MSP's flexible audio processing capabilities, the system achieves its primary goal: enabling hands-free manipulation of audio effects during musical performance. 
