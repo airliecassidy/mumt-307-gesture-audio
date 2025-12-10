@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Hand Audio FX</title>
+  <link rel="stylesheet" type="text/css" href="appstyle.css">
+  <script
+    type="text/javascript"
+    src="node_modules/@mediapipe/camera_utils/camera_utils.js"
+  ></script>
+  <script
+    type="text/javascript"
+    src="node_modules/@mediapipe/control_utils/control_utils.js"
+  ></script>
+  <script
+    type="text/javascript"
+    src="node_modules/@mediapipe/drawing_utils/drawing_utils.js"
+  ></script>
+  <script
+    type="text/javascript"
+    src="node_modules/@mediapipe/hands/hands.js"
+  ></script>
+  <script
+    type="text/javascript"
+    src="node_modules/osc-js/lib/osc.min.js"
+  ></script>
+</head>
+
+<body>
+  <div class="container">
+    <video class="input_video"></video>
+    <div class="canvas-container">
+      <canvas class="output_canvas" width="1280px" height="720px"></canvas>
+    </div>
+  </div>
+  
+  <div class="view">
+    <button onclick="toggleControl()" id="controlButton">Hide controls</button>
+  </div>
+  
+  <div class="control-panel">
+    <b style="font-size:14px;">Hand Audio FX</b>
+    <br><br>
+    Selfie view <input id="selfie" type="checkbox" checked="checked">
+    Show tracking <input id="showTracking" type="checkbox" checked="checked">
+    FPS <span id="fps">0</span>
+    <hr>
+
+    <div class="select">
+      <label for="videoSource">Camera </label><select id="videoSource"></select>
+    </div>
+    <hr>
+
+    <b>Audio File</b><br>
+    <input type="file" id="audioFile" accept="audio/*"><br>
+    <button id="playBtn" onclick="playAudio()">Play</button>
+    <button id="stopBtn" onclick="stopAudio()">Stop</button>
+    <input type="checkbox" id="loopAudio"> Loop<br>
+    <span id="audioStatus">No file loaded</span>
+    <hr>
+
+    <b>OSC Status:</b> <span id="oscStatus">Connecting...</span>
+    <hr>
+
+    <b>Effects (Right Hand Gestures)</b>
+    <table>
+      <tr><td width="70">Reverb</td><td><input type="checkbox" id="reverbActive" disabled></td><td>Depth: <span id="reverbDepth">0</span>%</td><td>Peace ️</td></tr>
+      <tr><td>Distortion</td><td><input type="checkbox" id="distortionActive" disabled></td><td>Depth: <span id="distortionDepth">0</span>%</td><td>Fist </td></tr>
+      <tr><td>Echo</td><td><input type="checkbox" id="echoActive" disabled></td><td>Depth: <span id="echoDepth">0</span>%</td><td>One </td></tr>
+      <tr><td>Chorus</td><td><input type="checkbox" id="chorusActive" disabled></td><td>Depth: <span id="chorusDepth">0</span>%</td><td>Palm ️</td></tr>
+      <tr><td>Pitch</td><td><input type="checkbox" id="pitchActive" disabled></td><td>Depth: <span id="pitchDepth">0</span>%</td><td>Thumb </td></tr>
+    </table>
+    <hr>
+
+    <b>Depth Control (Left Hand)</b><br>
+    Pinch distance: <span id="pinchValue">0</span>%
+    <hr>
+
+    <b>Gesture:</b> <span id="currentGesture">None</span><br>
+    <small>Kill All: Back of hand </small>
+  </div>
+  
+  <script type="text/javascript" src="script.js"></script>
+</body>
+</html>
