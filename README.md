@@ -23,7 +23,7 @@ The system uses a toggle-based interaction model, where gestures act as an on/of
 
 ### 3.2 Gesture-Based Musical Interfaces
 
-## 4. System Architecture
+## 4. System Architecture & Design
 
 
 
@@ -83,15 +83,21 @@ The Node.js bridge server uses the osc-js library with its BridgePlugin to handl
 
 
 ### 5.4 Audio Effects Implementation in Max/MSP
-All audio effects are implemented in Max/MSP using a consistent architecure. 
+All audio effects are implemented in Max/MSP using a consistent architecure. The Max/MSP audio engine receives OSC messages via [udpreceive 8000] and routes them to individual effect modules. Each effect is implemented as a separate patch that receives audio via [receive~ audio_in_l/r] and outputs processed signal via [send~ fx_wet_l/r].
+
+### 5.4.1 Reverb Effect
+
+### 5.4.2 Distortion Effect
+The distortion effect uses a multi-stage signal chain: pre-gain boost. high-pass filtering to remove 
+
+### 5.4.3 Chorus Effect
+
+### Low-Pass Filter
+
+### Granular Pitch Shifting
 
 
 
-## High-Level Features 
-
-## System Architecture & Design
-
-## Methodology & Implementation 
 
 # Future Work & Possible Improvements 
 1. Daw Integration
