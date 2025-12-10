@@ -32,8 +32,8 @@ The system uses a toggle-based interaction model, where gestures act as an on/of
 MediaPipe Hands employs a two-stage detection pipeline optimized for real-time performance. The first stage uses a lightweight palm detector to locate hands within the frame, reducing hte search space for the subsequent landmark model. The second  stage predicts 21 three-dmensional landmarks per detected hand, representing key anatomical points from the wrist through each fingertip. 
 
 <img width="878" height="424" alt="image" src="https://github.com/user-attachments/assets/6d794dcc-b1d1-4cb5-991d-5d0749d3f265" />
-*Figure 1*: *MediaPipe hand landmark indices*. *The model outputs 21 keypoints with x,y,z coordinates*.
-
+_Figure 1: MediaPipe hand landmark indices. The model outputs 21 keypoints with x,y,z coordinates.
+_
 
 The JavaScript implementation initializes MediaPipe Hands with the following configuration: 
 
