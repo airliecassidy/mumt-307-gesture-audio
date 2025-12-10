@@ -1,8 +1,9 @@
 # Real-Time Gesture-Controlled Audio Effects
 
+## 1. Abstract
 This project implements a real-time system that enables msuicians to control audio effects through hand gestures captured by a standard webcame. By integrating MediaPipe's hand landmark detection with custon gesture classification and Max/MSP digital signal processing, the system creates an intuitive, touchless interface for audio manipulation. The right hand controls discrete effect activation through recognized gestures (fist, palm, peace sign, thumbs-up, single finger), while the left hand provides continuous parameter modulation through pinch distance measuremnet. Five audio-effects - distortion, reverb, echo, chorus and pitch-shifting - can be toggled independently and layered simultaneously, with gesture controlled depth parameters affecting the intensity of each active effect. The system communications via Open Sound Control (OSC) protocol,bridging the browser-based computer vision with Max/MSP's audio engine through a Node.js WebSocket-to-UDP bridge. 
 
-## Motivation & Objectives 
+## 2. Motivation & Objectives 
 The primary motivation for this project emerged from a practical challenge encountered during guitar recording sessions. When tracking guitar parts, the need to adjust effect parameters - adding reverb during a sustained chord, or engaging a delay - typically requires interrupting the performacne to manipulate physical controls. 
 I envisioned a system where these adjustmnets could be made through natural hand-gestures, allowing continuous playing while dramatically shaping the sound. The main objectives I had for this project were: 
 >**1. Hands-free effect control:** Enable toggling of audio effects without touching equipment.
@@ -16,11 +17,18 @@ I envisioned a system where these adjustmnets could be made through natural hand
 
 The system uses a toggle-based interaction model, where gestures act as an on/off switch, rather than requiring sustaining poses. This allows the performer to make a gesture, return their hand to the instrumnet and have the effect remain active until explicitly toggled off - this mirrors the behaviour of traditional stomp-box effect pedals. 
 
+## 3. Background & Related Works 
+
+### 3.1 Hand Tracking in Computer Vision 
+
+### 3.2 Gesture-Based Musical Interfaces
+
+## 4. System Architecture
 
 
 
-## Methodology 
-### Hand Tracking and Gesture Recognition 
+## 5. Methodology 
+### 5.1 Hand Tracking with MediaPipe
 MediaPipe Hands employs a two-stage detection pipeline optimized for real-time performance. The first stage uses a lightweight palm detector to locate hands within the frame, reducing hte search space for the subsequent landmark model. The second  stage predicts 21 three-dmensional landmarks per detected hand, representing key anatomical points from the wrist through each fingertip. 
 
 <img width="878" height="424" alt="image" src="https://github.com/user-attachments/assets/6d794dcc-b1d1-4cb5-991d-5d0749d3f265" />
@@ -31,7 +39,7 @@ The JavaScript implementation initializes MediaPipe Hands with the following con
 
 <img width="674" height="285" alt="Screenshot 2025-12-10 at 11 59 14 AM" src="https://github.com/user-attachments/assets/eaaefd9b-01b0-4eef-8cf4-af1767efbcf7" />
 
-### Gesture recognition 
+### 5.2 Gesture recognition 
 Gesture recognition is implemented through geometric analysis of landmark positions. Rather than training a separate machine learning classifier (which would require collecting and labeling training data), I developed rule-based detection functions that analyze finger extension patterns, relative distances, and spatial relationships.
 
 The fundamental building block is determining whether each finger is extended or curled. This is achieved by comparing the distance from the fingertip to the wrist against the distance from the finger's metacarpophalangeal (MCP) joint to the wrist:
@@ -40,11 +48,16 @@ The fundamental building block is determining whether each finger is extended or
 
 Five distinct gestures are recognized, each mapped to an audio effect:
 
-Fist - Distortion 
-Palm - Chrous
-Peace - Reverb
-Thumbs Up - Pitch Shift
-One Finger - Echo/Delay 
+> Fist - Distortion
+> 
+> Palm - Chrous
+> 
+> Peace - Reverb
+> 
+> Thumbs Up - Pitch Shift
+> 
+> One Finger - Echo/Delay
+> 
 
   Example implementation of the peace sign detection:
 
@@ -63,13 +76,13 @@ A moving average filter smooths the raw pinch values to prevent jittery paramete
 <img width="661" height="414" alt="Screenshot 2025-12-10 at 12 11 11 PM" src="https://github.com/user-attachments/assets/60b00f39-f427-4986-87b5-8db2c01b93a8" />
 
 
-### OSC Communication Protocol 
+### 5.3 OSC Communication Protocol 
 Browser security restrictions prevent direct UDP socket access, necessitating a WebSocket-to-UDP bridge architecture. The browser client connects to a Node.js server via WebSocket, which then forwards OSC messages as UDP packets to Max/MSP.
 
 The Node.js bridge server uses the osc-js library with its BridgePlugin to handle protocol translation:
 
 
-### Audio Effects Implementation 
+### 5.4 Audio Effects Implementation in Max/MSP
 All audio effects are implemented in Max/MSP using a consistent architecure. 
 
 
