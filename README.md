@@ -92,14 +92,14 @@ The distortion effect uses a multi-stage signal chain: pre-gain boost. high-pass
 
 ### 5.4.3 Chorus Effect
 
-### Low-Pass Filter
+### 5.4.4 Low-Pass Filter
 
-### Granular Pitch Shifting
-
-
+### 5.4.5 Granular Pitch Shifting
 
 
-# Future Work & Possible Improvements 
+
+
+## Future Work & Possible Improvements 
 1. Daw Integration
 2. Custom Gesture Training
 3. Multi-Parameter Control
@@ -108,7 +108,7 @@ The distortion effect uses a multi-stage signal chain: pre-gain boost. high-pass
    
 
 ## References & Citations
-## Libraries and Frameworks
+### Libraries and Frameworks
 MediaPipe Hands
 Lugaresi, C., Tang, J., Nash, H., McClanahan, C., Uboweja, E., Hays, M., Zhang, F., Chang, C., Yong, M. G., Lee, J., Chang, W., Hua, W., Georg, M., & Grundmann, M. (2019). MediaPipe: A Framework for Building Perception Pipelines. arXiv preprint arXiv:1906.08172.
 https://google.github.io/mediapipe/solutions/hands.html
@@ -121,7 +121,7 @@ Max/MSP
 Cycling '74. Max 9 [Computer software].
 https://cycling74.com/products/max
 
-## Inspirational Projects 
+### Inspirational Projects 
 jweb-mediapipe
 Rich, R. MediaPipe integration for Max/MSP via jweb.
 https://github.com/robtherich/jweb-mediapipe
@@ -134,7 +134,7 @@ Gesture Volume Control
 Bhatnagar, P. MediaPipe-based volume control implementation.
 https://github.com/pratham-bhatnagar/Gesture-Volume-Control
 
-## Reference Materials
+### Reference Materials
 
 Stanford CS231N Hand Tracking Report
 https://cs231n.stanford.edu/2025/papers/
