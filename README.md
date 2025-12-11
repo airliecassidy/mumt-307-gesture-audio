@@ -7,7 +7,7 @@ Users load an audio file into the browser interface, which streams the audio to 
 ## 2. Motivation & Objectives
 The primary motivation for this project emerged from a desire to create a more expressive, embodied way of manipulating audio effects during music production and sound design. Traditional DAW workflows require precise mouse movements or memorized keyboard shortcuts to adjust effect parameters—interactions that feel disconnected from the physical, gestural nature of musical performance. I wanted to explore whether hand gestures could provide a more intuitive and expressive control interface.
 
-The system is designed for audio file processing rather than live instrument input. Users load an audio file (such as a recorded guitar track, vocal take, or any sound design material) into the browser interface, then use hand gestures to dynamically control effects as the audio plays back. This workflow is particularly suited for:
+The system is designed for audio file processing rather than live instrument input. Users load an audio file (such as a recorded guitar track, vocal take, or any sound design material) into the browser interface, then use hand gestures to dynamically control effects as the audio plays back. 
 
 The main objectives for this project were:
 ```
@@ -222,7 +222,7 @@ Hold gesture for ~0.4 seconds to activate.
 
 ## 6. Challenges & Solutions
 ### 6.1 Thumb Detection Reliability
-```**Problem:** The thumbs-up gesture proved unreliable because MediaPipe's z-coordinate estimation (depth from monocular camera) is less accurate than x/y positioning. The thumb's position relative to the camera
+```**Problem:** The fist gesture proved unreliable because MediaPipe's z-coordinate estimation (depth from monocular camera) is less accurate than x/y positioning. This is due to MediaPipe Hands estimating 3D landmark positions from a 2d monocular camera. 
 ```
 
 **Solution:** Changed the detection logic to rely on y-coordinate comparison (thumb tip above wrist in screen space) rather than z-depth. This sacrificed some angle tolerance but significantly improved reliability for front-facing camera positions.
@@ -231,32 +231,71 @@ Hold gesture for ~0.4 seconds to activate.
 ```**Problem**: Transitional hand positions between gestures (e.g., moving from fist to palm) triggered unintended effect changes when the hand passed through configurations that momentarily matched other gestures.
 ```
 
-
-**Solution**: Implemented a hold-time requirement (400ms) and gesture confirmation state machine. A gesture is only considered valid if it is maintained consistently for the full duration. Combined with a 700ms cooldown between triggers, this eliminated nearly all false positives during typical use.
+**Solution**: Implemented a multi-stage filtering approach: 
+1. **Hold-time requirement (400ms):** A gesture must be detected consistently for 400 milliseconds before triggering. This filters out transient states that occur during gesture transitions.
+2. **Gesture confirmation state machine:** The system tracks currentGesture, gestureStartTime, and gestureConfirmed state variables. Only when a gesture is held past the threshold does gestureConfirmed become true and trigger the effect toggle.
+3. **Cooldown period (700ms)**: After any successful gesture trigger, a 700ms cooldown prevents retriggering. This stops rapid on-off-on sequences if the user's hand wobbles near a gesture boundary.
 
 ### 6.3 Max/MSP Stability and OSC Overload
 ```**Problem**: Max/MSP crashes frequently during extended use. Gesture data updates at video frame rate (~30 FPS), which can overwhelm Max when parameters are changed too frequently. Each frame potentially sends multiple OSC messages for position, depth, and gesture state—resulting in a continuous stream of parameter updates that Max struggles to process smoothly.
 ```
 
-**Solution**: Several mitigation strategies were implemented:
+**Solution**: Gesture data updates at video frame rate (~30 FPS). Each frame potentially generates multiple OSC messages:
+- /fx/{effect}/depth — continuous depth value (sent every frame when hand is visible)
+- /fx/{effect}/active — toggle messages (sent on gesture confirmation)
+- /audio/left and /audio/right — audio sample data (sent every 8th frame)
+  
+At 30 FPS with 5 effects, this can mean 150+ parameter updates per second flowing into Max. Each OSC message triggers Max's event scheduling system, which must then update [line~] objects, recalculate filter coefficients, and propagate changes through the signal chain. When combined with the audio processing load, this overwhelms Max's message queue.
+
+The problem is exacerbated by the distributed architecture. The browser, Node.js bridge, and Max/MSP all run as separate processes with no shared timing. OSC messages can arrive in bursts when network buffers flush, creating momentary spikes of hundreds of messages that Max must process synchronously.
+
+Several mitigation strategies were implemented:
 
 - Parameter smoothing: All incoming OSC values are processed through [line~] objects with appropriate ramp times, reducing the effective rate of parameter changes reaching the DSP chain.
 - Conservative gain staging: Effect output levels are carefully managed to prevent clipping and feedback loops that could compound instability.
 - Message throttling: The browser only sends depth updates every few frames rather than every frame
+- Deferred processing: OSC receive objects connected through [defer] to move processing to low-priority thread	
   
-However, this challenge highlighted a fundamental limitation of real-time OSC-driven control at video frame rates. The architecture works for demonstration and experimentation, but a production system would likely require tighter integration—perhaps using Max's native [jit.grab] and JavaScript within Max for hand tracking, eliminating the browser-to-Max communication overhead entirely.
+However, this challenge highlighted a fundamental limitation of real-time OSC-driven control at video frame rates. The architecture works for demonstration and experimentation, but a production system would likely require tighter integration—perhaps using Max's [jit.grab] and JavaScript within Max for hand tracking, eliminating the browser-to-Max communication overhead entirely. 
 
 ### 6.4 What Was Rewarding
-Despite the technical challenges-particularly the Max stability issues that remained only partially resolved-this project provided valuable learning experiences:
+Despite the technical challenges—particularly the Max/MSP stability issues that remained only partially resolved—this project provided deeply valuable learning experiences that extended well beyond the specific implementation.
 
-Key Takeaways:
+```
+**Real-Time Hand Tracking Experience
+**
+Before this project, I understood hand tracking conceptually but had no practical experience with its capabilities and limitations. Working with MediaPipe revealed nuances that aren't apparent from documentation alone:
+- How lighting conditions affect tracking—not just brightness, but directionality and color temperature
+- The importance of the "confidence" threshold parameters and how they trade off between false positives and missed detections
+- Why gesture "hold time" and debouncing are essential for any practical gesture interface, not just nice-to-haves
+This hands-on experience gave me intuition for what's realistic to expect from vision-based gesture systems, which will inform future project designs.
 
-- Real-time hand tracking: Gaining hands-on experience with MediaPipe's landmark detection system and understanding its capabilities and limitations in practice.
-- Multi-environment system architecture: Learning how to bridge multiple software environments (browser JavaScript, Node.js, Max/MSP) and programming languages together into a cohesive system.
-- Communication protocols: Working through the challenges of OSC, WebSocket-to-UDP bridging, and understanding why certain architectural decisions matter for latency and reliability.
-- Interactive audio systems: Deepening understanding of how interactive audio systems are structured in practice—the separation of control rate vs. audio rate, the importance of parameter smoothing, and the tradeoffs between responsiveness and stability.
+```
+```
+**Multi-Environment System Architecture
+**
+Learning how to architect a system that bridges multiple software environments—browser JavaScript, Node.js, and Max/MSP—each with different programming paradigms, timing models, and communication mechanisms, was perhaps the most transferable skill gained from this project.
 
-Working through these challenges provided insight into why commercial gesture-control systems (like Leap Motion integrations) often use tightly coupled, single-environment implementations rather than distributed architectures. The project served as an effective learning exercise in the complexities of real-time, multi-modal system design.
+
+```
+```
+**Communication Protocols
+**
+Working through the challenges of OSC, WebSocket-to-UDP bridging, and understanding why certain architectural decisions matter for latency and reliability.
+```
+```
+**Interactive Audio System Design Principles
+**
+
+The project deepened my understanding of how interactive audio systems are structured in practice:
+
+- Control rate vs. audio rate: Why parameter changes must be smoothed before reaching the DSP chain, and how [line~] bridges these two timing domains
+- Stability vs. responsiveness tradeoffs: Faster response means less smoothing, which means more susceptibility to noise and discontinuities; there's no free lunch
+- The importance of gain staging: Effects that work fine in isolation can interact catastrophically when chained; careful level management throughout the signal path is essential
+- The stability problems I encountered explain why products like Leap Motion + Ableton integrations are built as native plugins rather than distributed systems communicating over network protocols
+```
+
+The project served as an effective learning exercise in the complexities of real-time, multi-modal system design.
 
 ## 7. Future Work & Possible Improvements
 ### 7.1 Live Audio Input Support
