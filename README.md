@@ -10,15 +10,12 @@ The primary motivation for this project emerged from a desire to create a more e
 The system is designed for audio file processing rather than live instrument input. Users load an audio file (such as a recorded guitar track, vocal take, or any sound design material) into the browser interface, then use hand gestures to dynamically control effects as the audio plays back. This workflow is particularly suited for:
 
 The main objectives for this project were:
-
->1. Hands-free effect control: Enable toggling of audio effects without touching equipment.
->   
->2. Continuous parameter modulation: Provide smooth, real-time control over effect depth/intensity.
->   
->3. Low latency: Achiee response times suitable for live musical performace.
->   
->4. Accessibility: Require only a laptop, rather than specialized sensors.
->   
+```
+1. Hands-free effect control: Enable toggling of audio effects without touching equipment.   
+2. Continuous parameter modulation: Provide smooth, real-time control over effect depth/intensity.
+3. Low latency: Achiee response times suitable for live musical performace.
+4. Accessibility: Require only a laptop, rather than specialized sensors.
+```
 
 The system uses a toggle-based interaction model, where gestures act as an on/off switch, rather than requiring sustaining poses. This allows the performer to make a gesture, return their hand to a neutral position, and have the effect remain active until explicitly toggled off - mirroring the behavior of traditional stomp-box effect pedals.
 
@@ -39,7 +36,7 @@ The system comprises four interconnected layers, each responsible for a distict 
 ### 5.1 Hand Tracking with MediaPipe
 MediaPipe Hands employs a two-stage detection pipeline optimized for real-time performance. The first stage uses a lightweight palm detector to locate hands within the frame, reducing the search space for the subsequent landmark model. The second stage predicts 21 three-dmensional landmarks per detected hand, representing key anatomical points from the wrist through each fingertip.
 
-image
+
 Figure 1: MediaPipe hand landmark indices. The model outputs 21 keypoints with x,y,z coordinates.
 
 The JavaScript implementation initializes MediaPipe Hands with the following configuration:
@@ -53,16 +50,13 @@ The fundamental building block is determining whether each finger is extended or
 Screenshot 2025-12-10 at 12 05 35 PM
 Five distinct gestures are recognized, each mapped to an audio effect:
 
-> Fist - Distortion
->
-> Palm - Chrous
-> 
-> Peace - Reverb
->
-> Thumbs Up - Pitch Shift
->
-> One Finger - Echo/Delay
-> 
+```
+Fist - Distortion
+Palm - Chorus
+Peace - Reverb
+Thumbs Up - Pitch Shift
+One Finger - Echo/Delay
+```
 
 Example implementation of the peace sign detection:
 
