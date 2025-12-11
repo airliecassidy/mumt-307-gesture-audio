@@ -41,13 +41,16 @@ Figure 1: MediaPipe hand landmark indices. The model outputs 21 keypoints with x
 
 The JavaScript implementation initializes MediaPipe Hands with the following configuration:
 
-Screenshot 2025-12-10 at 11 59 14 AM
+<img width="575" height="298" alt="Screenshot 2025-12-10 at 8 35 11 PM" src="https://github.com/user-attachments/assets/2bc27002-177c-4ad1-a51d-84917ef833fd" />
+
+
 ### 5.2 Gesture recognition
 Gesture recognition is implemented through geometric analysis of landmark positions. Rather than training a separate machine learning classifier (which would require collecting and labeling training data), I developed rule-based detection functions that analyze finger extension patterns, relative distances, and spatial relationships.
 
 The fundamental building block is determining whether each finger is extended or curled. This is achieved by comparing the distance from the fingertip to the wrist against the distance from the finger's metacarpophalangeal (MCP) joint to the wrist:
 
-Screenshot 2025-12-10 at 12 05 35 PM
+<img width="441" height="271" alt="Screenshot 2025-12-10 at 8 36 08 PM" src="https://github.com/user-attachments/assets/e59b45b7-b5af-426b-96fd-b8e38da808c8" />
+
 Five distinct gestures are recognized, each mapped to an audio effect:
 
 ```
@@ -60,20 +63,28 @@ One Finger - Echo/Delay
 
 Example implementation of the peace sign detection:
 
-Screenshot 2025-12-10 at 12 07 10 PM
+<img width="441" height="162" alt="Screenshot 2025-12-10 at 8 36 44 PM" src="https://github.com/user-attachments/assets/e57c43cf-edb6-4097-8a2e-f5f08c69ee8d" />
+
 To prevent accidental triggers from transient hand positions, gestures must be held for a minimum duration before activation. Additionally, a cooldown period prevents rapid repeated toggles:
 
-Screenshot 2025-12-10 at 12 09 00 PM
+<img width="683" height="569" alt="Screenshot 2025-12-10 at 8 38 15 PM" src="https://github.com/user-attachments/assets/3b2ce364-c36a-4519-819b-493f8b59b17a" />
+
 The left hand provides continuous control through pinch distance measurement—the Euclidean distance between thumb tip (landmark 4) and index tip (landmark 8):
 
-Screenshot 2025-12-10 at 12 09 52 PM
+<img width="460" height="206" alt="Screenshot 2025-12-10 at 8 38 46 PM" src="https://github.com/user-attachments/assets/5ccafea4-669a-4737-b11d-11450401a7f0" />
+
 A moving average filter smooths the raw pinch values to prevent jittery parameter changes:
 
-Screenshot 2025-12-10 at 12 11 11 PM
+<img width="665" height="410" alt="Screenshot 2025-12-10 at 8 39 20 PM" src="https://github.com/user-attachments/assets/0e675242-69ed-4562-9109-fb24d665f4b5" />
+
+
 ### 5.3 OSC Communication Protocol
 Browser security restrictions prevent direct UDP socket access, necessitating a WebSocket-to-UDP bridge architecture. The browser client connects to a Node.js server via WebSocket, which then forwards OSC messages as UDP packets to Max/MSP.
 
-The Node.js bridge server uses the osc-js library with its BridgePlugin to handle protocol translation: Screenshot 2025-12-10 at 1 26 07 PM
+The Node.js bridge server uses the osc-js library with its BridgePlugin to handle protocol translation: 
+
+<img width="529" height="341" alt="Screenshot 2025-12-10 at 8 40 33 PM" src="https://github.com/user-attachments/assets/c3aa4d57-65b8-40b6-8a38-662ea9485ba7" />
+
 
 ### 5.4 Audio Effects Implementation in Max/MSP
 All audio effects are implemented in Max/MSP using a consistent architecure. The Max/MSP audio engine receives OSC messages via [udpreceive 8000] and routes them to individual effect modules. Each effect is implemented as a separate patch that receives audio via [receive~ audio_in_l/r] and outputs processed signal via [send~ fx_wet_l/r]. A key architectural decision across all effects is the separation of two control envelopes: depth (controlling effect intensity) and active (controlling wet signal presence). This makes each effect feel like a pressure-sensitive control rather than a binary on/off stompbox.
@@ -211,21 +222,21 @@ Hold gesture for ~0.4 seconds to activate.
 
 ## 6. Challenges & Solutions
 ### 6.1 Thumb Detection Reliability
-> **Problem:** The thumbs-up gesture proved unreliable because MediaPipe's z-coordinate estimation (depth from monocular camera) is less accurate than x/y positioning. The thumb's position relative to the camera
-> 
+```**Problem:** The thumbs-up gesture proved unreliable because MediaPipe's z-coordinate estimation (depth from monocular camera) is less accurate than x/y positioning. The thumb's position relative to the camera
+```
 
 **Solution:** Changed the detection logic to rely on y-coordinate comparison (thumb tip above wrist in screen space) rather than z-depth. This sacrificed some angle tolerance but significantly improved reliability for front-facing camera positions.
 
 ### 6.2 Gesture Boundary Ambiguity
->**Problem**: Transitional hand positions between gestures (e.g., moving from fist to palm) triggered unintended effect changes when the hand passed through configurations that momentarily matched other gestures.
->
+```**Problem**: Transitional hand positions between gestures (e.g., moving from fist to palm) triggered unintended effect changes when the hand passed through configurations that momentarily matched other gestures.
+```
 
 
 **Solution**: Implemented a hold-time requirement (400ms) and gesture confirmation state machine. A gesture is only considered valid if it is maintained consistently for the full duration. Combined with a 700ms cooldown between triggers, this eliminated nearly all false positives during typical use.
 
 ### 6.3 Max/MSP Stability and OSC Overload
->**Problem**: Max/MSP crashes frequently during extended use. Gesture data updates at video frame rate (~30 FPS), which can overwhelm Max when parameters are changed too frequently. Each frame potentially sends multiple OSC messages for position, depth, and gesture state—resulting in a continuous stream of parameter updates that Max struggles to process smoothly.
->
+```**Problem**: Max/MSP crashes frequently during extended use. Gesture data updates at video frame rate (~30 FPS), which can overwhelm Max when parameters are changed too frequently. Each frame potentially sends multiple OSC messages for position, depth, and gesture state—resulting in a continuous stream of parameter updates that Max struggles to process smoothly.
+```
 
 **Solution**: Several mitigation strategies were implemented:
 
