@@ -32,7 +32,8 @@ The concept of gestural control in music has historical precedent in instruments
 ## 4. System Architecture & Design
 The system comprises four interconnected layers, each responsible for a distict aspect of the gesture-to-audio pipeline:
 
-Screenshot 2025-12-10 at 2 04 19 PM
+<img width="461" height="268" alt="Screenshot 2025-12-10 at 2 04 19 PM" src="https://github.com/user-attachments/assets/3ae6acf4-9d35-4da9-b7bc-c1fb100c3628" />
+
 
 ## 5. Methodology
 ### 5.1 Hand Tracking with MediaPipe
